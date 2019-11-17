@@ -1,7 +1,6 @@
 #ifndef QUERY_EXECUTOR_H
 #define QUERY_EXECUTOR_H
 
-#include "ConnectionProvider.h"
 #include <sqlite3.h>
 
 class QueryExecutor{
@@ -15,18 +14,13 @@ class QueryExecutor{
 
     int createDatabase();
 
+    static int createAndObtainId(char* sql); //tworzy nowy rekord i zwraca jego ID
+
+    static int create(char* sql); //tylko tworzy nowy rekord
+
     int select() {}
 
-    int insert() {}
-
-   
-
-
-
-
-
-
-  
+    int insert() {}  
 };
 
 
