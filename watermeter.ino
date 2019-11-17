@@ -7,6 +7,7 @@
 #include <ESP8266WiFi.h>
 #include "ConnectionProvider.h"
 #include "Measurement.h"
+#include "QueryExecutor.h"
 
 //const char* data = "Callback function called";
 //static int callback(void *data, int argc, char **argv, char **azColName) {
@@ -47,26 +48,28 @@
 //}
 
 void setup() {
-  Serial.begin(115200);
-  while(!Serial);
+    Serial.begin(115200);
+    while(!Serial);
 
-  Serial.println("\nInit!");
+    Serial.println("\nInit!");
 //  sqlite3 *db1;
 //  sqlite3 *db2;
 //  char *zErrMsg = 0;
 //  int rc;
 //  char *sql;
 //
-  system_update_cpu_freq(SYS_CPU_160MHZ);
-//  
-  SPI.begin();
-  vfs_mount("/SD0", 2);
+    system_update_cpu_freq(SYS_CPU_160MHZ);
+//
+    SPI.begin();
+    vfs_mount("/SD0", 2);
 
-  ConnectionProvider::init();
+    ConnectionProvider::init();
 
-  Measurement m = Measurement::create(10);
+    QueryExecutor::createDatabase();
 
-  ConnectionProvider::close();
+    Measurement m = Measurement::create(10);
+
+    ConnectionProvider::close();
 //
 //  sqlite3_initialize();
 //
