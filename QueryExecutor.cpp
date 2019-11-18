@@ -38,16 +38,30 @@ int QueryExecutor::createDatabase() {
 
 int QueryExecutor::createAndObtainId(char* sql) {
 
-  if (create(sql) == SQLITE_OK) {
-    //get id
-  }
-  return -1;
+
+    if (create(sql) == SQLITE_OK) {
+        String sql = "select max(id) from measurement";
+        int rc;
+        sqlite3_stmt *res;
+        const char *tail;
+        rc = sqlite3_prepare_v2(ConnectionProvider::getConnection(), sql.c_str(), 1000, &res, &tail);
+        if (rc != SQLITE_OK) {
+            Serial.println("Something went wrong!!!!\n");
+            return -1;
+        }
+        if (sqlite3_step(res) == SQLITE_ROW) {
+            return sqlite3_column_int(res, 0);
+        }
+
+    }
+    return -1;
 }
 
 int QueryExecutor::create(char* sql) {
-  int rc = exec(sql);
-  if (rc != SQLITE_OK) {
-    Serial.println("Something went wrong!!!!\n");
-  }
-  return rc;
+    int rc = exec(sql);
+    if (rc != SQLITE_OK) {
+        Serial.println("Something went wrong!!!!\n");
+    }
+    return rc;
 }
+
