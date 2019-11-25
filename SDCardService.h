@@ -13,9 +13,9 @@
 
 CSVFile* createFile(const char* fileName);
 
-void writeMeasurementToFile(CSVFile &csv, uint32_t &time, uint32_t &value);
+void writeMeasurementToFile(CSVFile *csv, uint32_t utime, uint32_t value);
 
-void readValuesOfCurrentRow(CSVFile &csv, uint32_t &time, uint32_t &value);
+void readValuesOfCurrentRow(CSVFile *csv, uint32_t &utime, uint32_t &value);
 
 
 

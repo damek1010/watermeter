@@ -1,18 +1,18 @@
 #include "SDCardService.h"
 
-void writeMeasurementToFile(CSVFile &csv, uint32_t &time, uint32_t &value){
-    csv.addField(time);
-    csv.addField(value);
-    csv.addLine();
+void writeMeasurementToFile(CSVFile* csv, uint32_t utime, uint32_t value){
+    csv->addField(utime);
+    csv->addField(value);
+    csv->addLine();
 }
 
 CSVFile* createFile(const char* fileName){
-    CSVFile csv;
-    if (!csv.open(fileName, O_RDWR | O_CREAT)) {
+    CSVFile* csv = new CSVFile();
+    if (!csv->open(fileName, O_RDWR | O_CREAT)) {
         Serial.println("Failed open file");
         return nullptr;
     }
-    return &csv;
+    return csv;
 }
 
 CSVFile* openFileToAppend(const char* filename){
@@ -24,15 +24,15 @@ CSVFile* openFileToAppend(const char* filename){
     return &csv;
 }
 
-void readValuesOfCurrentRow(CSVFile &csv, uint32_t &time, uint32_t &value){
+void readValuesOfCurrentRow(CSVFile *csv, uint32_t &utime, uint32_t &value){
     char buffer[BUFFER_SIZE + 1];
     buffer[BUFFER_SIZE] = '\0';
     
-    csv.readField(buffer, BUFFER_SIZE);
-    time = atol(buffer);
-    csv.nextField();
+    csv->readField(buffer, BUFFER_SIZE);
+    utime = atol(buffer);
+    csv->nextField();
 
-    csv.readField(buffer, BUFFER_SIZE);
+    csv->readField(buffer, BUFFER_SIZE);
     value = atol(buffer);
-    csv.nextLine();
+    csv->nextLine();
 }
