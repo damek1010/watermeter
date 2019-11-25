@@ -5,9 +5,7 @@
 //#include <SPI.h>
 //#include <FS.h>
 #include <ESP8266WiFi.h>
-//#include "ConnectionProvider.h"
 #include "Measurement.h"
-//#include "QueryExecutor.h"
 
 #include "SDCardService.h"
 
@@ -20,12 +18,22 @@
 SdFat sd;
 CSVFile* csv;
 
-uint32_t timeVar = 10;
+uint32_t timeVar = 999999999;
 
-uint32_t lastMeasurement = 10;
+uint32_t lastMeasurement = 999999999;
 
 int i;
 
+//zmienna na czas
+//zmienne na piny podlaczonego zegarka
+
+
+
+
+//pulse counter
+
+
+//
 
 
 
@@ -37,8 +45,7 @@ void setup() {
 
   system_update_cpu_freq(SYS_CPU_160MHZ);
 
-  // SPI.begin();
-  // vfs_mount("/SD0", 2);
+
 
   pinMode(PIN_MOSI, OUTPUT);
   pinMode(PIN_MISO, INPUT);
@@ -54,6 +61,15 @@ void setup() {
     return;
   }
 
+  //timeservice, get time and save
+  //sdcardservice create/ open existing day file
+  ////create www page
+
+
+
+
+
+/*
   Serial.println("create file");
 
   csv = createFile("csvtest.csv");
@@ -85,9 +101,9 @@ void setup() {
 
   Serial.println("closinng-p--+-");
 
-  csv->close();
+  closeFile(csv);
 
-
+*/
 
 
   //    ConnectionProvider::init();
@@ -101,4 +117,13 @@ void setup() {
 }
 
 void loop() {
+
+  //obluga strony
+
+  //ustawic f liczaca na przerwaninu (?)
+  
+  //jesli zmienil sie dzien, wywolaj zmiane pliku csv 
+
+
+  
 }
