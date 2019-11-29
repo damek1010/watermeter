@@ -2,19 +2,22 @@
 #define MEASUREMENT_H
 
 #include <ESP8266WiFi.h>
+#include <Time.h>
+#include <TimeLib.h>
 
+#include "Measurement.h"
+#include "SDCardService.h"
 /*
  * Model pomiaru w bazie danych
  */
 class Measurement {
 
-  int value;
-  char* date; 
-
-  static char* TABLE_NAME;
+  uint32_t value;
+  uint32_t utime; 
   
   public:
-    static Measurement create(int value);
+    static Measurement* createAndSaveToFile(uint32_t value, CSVFile* csv);
+
 };
 
 #endif
