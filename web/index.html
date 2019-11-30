@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+    <link rel="stylesheet" href="style.css" />
+
+    <script>
+        function getRandomInt(min, max) {
+            min = Math.ceil(min);
+            max = Math.floor(max);
+            return Math.floor(Math.random() * (max - min)) + min;
+        }
+
+        window.onload = function () {
+            var points = [];
+
+            // for (let i = 0; i < 24; i++) {
+            //     let point = {};
+            //     point.y = getRandomInt(0, 100);
+            //     point.label = i + ":00";
+            //     points.push(point);
+            // }
+
+
+            var chart = new CanvasJS.Chart("waterConsumption", {
+                theme: "light2",
+                title: {
+                    text: "Zużycie wody"
+                },
+                data:[{
+                    type: "column",
+                    dataPoints: points
+                }]
+            });
+            chart.render();
+        };
+    </script>
+</head>
+<body>
+<div id="nav">
+    <div id="brand">
+        <h2>WATERMETER</h2>
+    </div>
+    <nav>
+        <ul>
+            <li class="active"><a href="index.html">Dane</a></li>
+            <li><a href="settings.html">Ustawienia</a></li>
+        </ul>
+    </nav>
+</div>
+<main>
+    <div class="wrapper">
+        <div id="waterConsumption"></div>
+        <div id="filter">
+            <label for="startDate">Od</label>
+            <input type="date" name="startDate" id="startDate"/>
+            <label for="endDate">Do</label>
+            <input type="date" name="startDate" id="endDate"/>
+        </div>
+    </div>
+    <script src="js/canvasjs/canvasjs.min.js"></script>
+</main>
+</body>
+</html>
