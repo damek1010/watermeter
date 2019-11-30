@@ -1,14 +1,10 @@
-#include <Time.h>
-#include <TimeLib.h>
-
 #include "Measurement.h"
-#include "QueryExecutor.h"
 
-char* Measurement::TABLE_NAME = "measurement";
 
-Measurement Measurement::create(int value) {
-    char insertSql[255];
-    time_t t = now();
-    sprintf(insertSql, "INSERT INTO %s (value, date) VALUES (%d, %lld);\n", Measurement::TABLE_NAME, value, t);
-    QueryExecutor::create(insertSql);
+Measurement* Measurement::createAndSaveToFile(uint32_t value, CSVFile* csv) {
+    Measurement* m = new Measurement();
+    m->value = value;
+    //m->utime = Timeservice::getTime(); //czy cos...
+    writeMeasurementToFile(csv, m->utime, m->value);
+    return m;
 }
