@@ -15,12 +15,13 @@
 #define PIN_CS D8
 
 #define INTERRUPT_PIN D1
+#define EXIT_PIN D2
 
 
 SdFat sd;
 CSVFile* csv;
 
-uint32_t utime = 999999999;
+uint32_t utime = 0;
 
 uint32_t lastMeasurement = 0;
 
@@ -28,12 +29,14 @@ uint32_t pulseCounter = 0;
 
 int i;
 
+bool end_of_work = false;
+
 //zmienna na czas
 //zmienne na piny podlaczonego zegarka
- 
- 
- 
- 
+
+
+
+
 static unsigned long last_interrupt_time = 0;
 
 void ICACHE_RAM_ATTR handleInterrupt() {
@@ -42,14 +45,18 @@ void ICACHE_RAM_ATTR handleInterrupt() {
   if (interrupt_time - last_interrupt_time > 100)
   {
     ++pulseCounter;
-    Serial.println(pulseCounter);
+    //Serial.println(pulseCounter);
 
-    Serial.println("writing to file");
+    //Serial.println("writing to file");
   }
   last_interrupt_time = interrupt_time;
 }
 
+void ICACHE_RAM_ATTR stopProgram() {
 
+  //Serial.println("Disabling Watermeter");
+  end_of_work = true;
+}
 
 
 
@@ -69,6 +76,9 @@ void setup() {
 
   pinMode(INTERRUPT_PIN, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN), handleInterrupt, FALLING);
+
+  pinMode(EXIT_PIN, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(EXIT_PIN), stopProgram, FALLING);
 
   pinMode(PIN_MOSI, OUTPUT);
   pinMode(PIN_MISO, INPUT);
@@ -99,53 +109,66 @@ void setup() {
 
 
 
-  
-/*
-  Serial.println("writing to file");
 
-  for (i = 0; i < 5; ++i, timeVar += 10, lastMeasurement += 20)
-    writeMeasurementToFile(csv, timeVar, lastMeasurement);
+  /*
+    Serial.println("writing to file");
 
-  Serial.println("going to begining");
+    for (i = 0; i < 5; ++i, timeVar += 10, lastMeasurement += 20)
+      writeMeasurementToFile(csv, timeVar, lastMeasurement);
 
-  csv->gotoBeginOfFile();
+    Serial.println("going to begining");
 
-  uint32_t readTime;
-  uint32_t readValue;
+    csv->gotoBeginOfFile();
 
-  Serial.println("reading");
-  for (i = 0; i < 3; ++i) {
-    readValuesOfCurrentRow(csv, readTime, readValue);
+    uint32_t readTime;
+    uint32_t readValue;
 
-    Serial.println(readTime);
-    Serial.println(readValue);
-  }
+    Serial.println("reading");
+    for (i = 0; i < 3; ++i) {
+      readValuesOfCurrentRow(csv, readTime, readValue);
+
+      Serial.println(readTime);
+      Serial.println(readValue);
+    }
 
 
-  Serial.println("closinng-p--+-");
+    Serial.println("closinng-p--+-");
 
-  closeFile(csv);
+    closeFile(csv);
 
-*/
+  */
 
 }
 
 void loop() {
 
   //obluga strony
-  
-  //jesli zmienil sie dzien, wywolaj zmiane pliku csv 
 
-  delay(1000*30);
+  //jesli zmienil sie dzien, wywolaj zmiane pliku csv
 
-//get time
+  delay(1000 * 3);
 
-  writeMeasurementToFile(csv, utime, lastMeasurement, pulseCounter - lastMeasurement);
+  //get time
 
+  noInterrupts();
+
+  writeMeasurementToFile(csv, utime, pulseCounter, pulseCounter - lastMeasurement);
+interrupts();
   //change this later
-  utime+=10;
+  utime += 3;
 
   lastMeasurement = pulseCounter;
-  
-  
+ // Serial.println("Writing to file");
+ // Serial.println(utime);
+
+  if (end_of_work) {
+      noInterrupts();
+
+    closeFile(csv);
+    while (1) {
+      delay(1000);
+    }
+  }
+
+
 }
