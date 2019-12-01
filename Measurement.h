@@ -12,11 +12,13 @@
  */
 class Measurement {
 
-  uint32_t value;
   uint32_t utime; 
+  uint32_t value;
+  uint32_t delta;
+
   
   public:
-    static Measurement* createAndSaveToFile(uint32_t value, CSVFile* csv);
+    static Measurement* createAndSaveToFile(uint32_t value, uint32_t delta, CSVFile* csv);
 
 };
 

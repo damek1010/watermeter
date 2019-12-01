@@ -14,23 +14,45 @@
 #define PIN_MISO D6
 #define PIN_CS D8
 
+#define INTERRUPT_PIN D1
+
 
 SdFat sd;
 CSVFile* csv;
 
-uint32_t timeVar = 999999999;
+uint32_t utime = 999999999;
 
-uint32_t lastMeasurement = 999999999;
+uint32_t lastMeasurement = 0;
+
+uint32_t pulseCounter = 0;
 
 int i;
 
 //zmienna na czas
 //zmienne na piny podlaczonego zegarka
+ 
+ 
+ 
+ 
+static unsigned long last_interrupt_time = 0;
+
+void ICACHE_RAM_ATTR handleInterrupt() {
+  unsigned long interrupt_time = millis();
+  // If interrupts come faster than 100ms, assume it's a bounce and ignore
+  if (interrupt_time - last_interrupt_time > 100)
+  {
+    ++pulseCounter;
+    Serial.println(pulseCounter);
+
+    Serial.println("writing to file");
+  }
+  last_interrupt_time = interrupt_time;
+}
 
 
 
 
-//pulse counter
+
 
 
 //
@@ -45,7 +67,8 @@ void setup() {
 
   system_update_cpu_freq(SYS_CPU_160MHZ);
 
-
+  pinMode(INTERRUPT_PIN, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN), handleInterrupt, FALLING);
 
   pinMode(PIN_MOSI, OUTPUT);
   pinMode(PIN_MISO, INPUT);
@@ -66,10 +89,6 @@ void setup() {
   ////create www page
 
 
-
-
-
-/*
   Serial.println("create file");
 
   csv = createFile("csvtest.csv");
@@ -78,6 +97,10 @@ void setup() {
     Serial.println("File opening error");
   }
 
+
+
+  
+/*
   Serial.println("writing to file");
 
   for (i = 0; i < 5; ++i, timeVar += 10, lastMeasurement += 20)
@@ -105,25 +128,24 @@ void setup() {
 
 */
 
-
-  //    ConnectionProvider::init();
-  //
-  //    QueryExecutor::createDatabase();
-  //
-  //    Measurement m = Measurement::create(10);
-  //
-  //    ConnectionProvider::close();
-
 }
 
 void loop() {
 
   //obluga strony
-
-  //ustawic f liczaca na przerwaninu (?)
   
   //jesli zmienil sie dzien, wywolaj zmiane pliku csv 
 
+  delay(1000*30);
 
+//get time
+
+  writeMeasurementToFile(csv, utime, lastMeasurement, pulseCounter - lastMeasurement);
+
+  //change this later
+  utime+=10;
+
+  lastMeasurement = pulseCounter;
+  
   
 }

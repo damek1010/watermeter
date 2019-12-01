@@ -1,9 +1,10 @@
 #include "SDCardService.h"
 
 
-void writeMeasurementToFile(CSVFile* csv, uint32_t utime, uint32_t value) {
+void writeMeasurementToFile(CSVFile* csv, uint32_t utime, uint32_t value, uint32_t delta) {
   csv->addField(utime);
   csv->addField(value);
+    csv->addField(delta);
   csv->addLine();
 }
 
@@ -26,7 +27,7 @@ CSVFile* openFile(const char* filename) {
 }
 
 
-void readValuesOfCurrentRow(CSVFile *csv, uint32_t &utime, uint32_t &value) {
+void readValuesOfCurrentRow(CSVFile *csv, uint32_t &utime, uint32_t &value, uint32_t &delta) {
   char buffer[BUFFER_SIZE + 1];
   buffer[BUFFER_SIZE] = '\0';
 
@@ -36,6 +37,10 @@ void readValuesOfCurrentRow(CSVFile *csv, uint32_t &utime, uint32_t &value) {
 
   csv->readField(buffer, BUFFER_SIZE);
   value = atol(buffer);
+  csv->nextField();
+
+  csv->readField(buffer, BUFFER_SIZE);
+  delta = atol(buffer);
   csv->nextLine();
 }
 

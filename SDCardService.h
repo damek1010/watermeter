@@ -13,16 +13,15 @@
 
 CSVFile* createFile(const char* fileName);
 
-void writeMeasurementToFile(CSVFile *csv, uint32_t utime, uint32_t value);
+void writeMeasurementToFile(CSVFile *csv, uint32_t utime, uint32_t value, uint32_t delta);
 
-void readValuesOfCurrentRow(CSVFile *csv, uint32_t &utime, uint32_t &value);
+void readValuesOfCurrentRow(CSVFile *csv, uint32_t &utime, uint32_t &value, uint32_t &delta);
 
 void closeFile(CSVFile *csv);
 
 void changeFileToNextDayFile(CSVFile *csv, const char * newFileName);
 
 CSVFile* openFile(const char* filename);
-
 
 
 
