@@ -3,24 +3,27 @@
 //#include <sqlite3.h>
 //#include <vfs.h>
 //#include <SPI.h>
-//#include <FS.h>
 #include <ESP8266WiFi.h>
+#include <ESP8266WebServer.h>
 #include "Measurement.h"
 
 #include "SDCardService.h"
+#include "TimeService.h"
+#include "HTMLLoader.h"
 
-#define PIN_CLK D5
-#define PIN_MOSI D7
-#define PIN_MISO D6
-#define PIN_CS D8
+#define PIN_CLK 14
+#define PIN_MOSI 13
+#define PIN_MISO 12
+#define PIN_CS 15
 
 #define INTERRUPT_PIN D1
 #define EXIT_PIN D2
 
-
-SdFat sd;
+//SdFat sd;
 CSVFile* csv;
 
+ESP8266WebServer server(80);
+HTMLLoader loader;
 uint32_t utime = 0;
 
 uint32_t lastMeasurement = 0;
@@ -32,7 +35,6 @@ int i;
 bool end_of_work = false;
 
 //zmienna na czas
-//zmienne na piny podlaczonego zegarka
 
 
 
@@ -94,50 +96,48 @@ void setup() {
     return;
   }
 
-  //timeservice, get time and save
-  //sdcardservice create/ open existing day file
-  ////create www page
+  pinMode(interruptPin, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(interruptPin), handleInterrupt, FALLING);
 
+}
 
-  Serial.println("create file");
+void handleRoot() {
+  String content = loader.load("/web/index.html");
+  server.send(200, "text/html", content);   // Send HTTP status 200 (Ok) and send some text to the browser/client
+}
 
-  csv = createFile("csvtest.csv");
+void handleNotFound() {
+  server.send(404, "text/html", "404: Not found"); // Send HTTP status 404 (Not Found) when there's no handler for the URI in the request
+}
 
-  if (csv == nullptr) {
-    Serial.println("File opening error");
+void setup() {
+  Serial.begin(115200);
+  while (!Serial);
+
+  Serial.println("\nInit!");
+
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
   }
 
+  Serial.println("writing to file");
 
+  for (i = 0; i < 5; ++i, timeVar += 10, lastMeasurement += 20)
+    writeMeasurementToFile(csv, timeVar, lastMeasurement);
 
+  server.on("/", handleRoot);               // Call the 'handleRoot' function when a client requests URI "/"
+  server.on("/style.css", []() {
+    server.send(200, "text/css", loader.load("/web/style.css"));
+  });   
+  server.on("/js/canvasjs/canvasjs.min.js", []() {
+    server.send(200, "application/javascript", loader.load("/web/js/canvasjs/canvasjs.min.js"));
+  });   
+  server.onNotFound(handleNotFound);        // When a client requests an unknown URI (i.e. something other than "/"), call function "handleNotFound"
+  
 
-  /*
-    Serial.println("writing to file");
-
-    for (i = 0; i < 5; ++i, timeVar += 10, lastMeasurement += 20)
-      writeMeasurementToFile(csv, timeVar, lastMeasurement);
-
-    Serial.println("going to begining");
-
-    csv->gotoBeginOfFile();
-
-    uint32_t readTime;
-    uint32_t readValue;
-
-    Serial.println("reading");
-    for (i = 0; i < 3; ++i) {
-      readValuesOfCurrentRow(csv, readTime, readValue);
-
-      Serial.println(readTime);
-      Serial.println(readValue);
-    }
-
-
-    Serial.println("closinng-p--+-");
-
-    closeFile(csv);
-
-  */
-
+  server.begin();
 }
 
 void loop() {
@@ -148,6 +148,8 @@ void loop() {
 
   delay(1000 * 3);
 
+
+  server.handleClient();
   //get time
 
   noInterrupts();
