@@ -32,6 +32,9 @@ uint32_t pulseCounter = 0;
 
 int i;
 
+short dayNumber;
+
+
 bool end_of_work = false;
 
 //zmienna na czas
@@ -96,8 +99,24 @@ void setup() {
     return;
   }
 
-  pinMode(interruptPin, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(interruptPin), handleInterrupt, FALLING);
+    WiFi.begin(ssid, password);
+    while (WiFi.status() != WL_CONNECTED) {
+        delay(500);
+        Serial.print(".");
+    }
+
+
+    server.on("/", handleRoot);               // Call the 'handleRoot' function when a client requests URI "/"
+    server.on("/style.css", []() {
+        server.send(200, "text/css", loader.load("/web/style.css"));
+    });
+    server.on("/js/canvasjs/canvasjs.min.js", []() {
+        server.send(200, "application/javascript", loader.load("/web/js/canvasjs/canvasjs.min.js"));
+    });
+    server.onNotFound(handleNotFound);        // When a client requests an unknown URI (i.e. something other than "/"), call function "handleNotFound"
+
+
+    server.begin();
 
 }
 
@@ -116,28 +135,14 @@ void setup() {
 
   Serial.println("\nInit!");
 
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
+
 
   Serial.println("writing to file");
 
   for (i = 0; i < 5; ++i, timeVar += 10, lastMeasurement += 20)
     writeMeasurementToFile(csv, timeVar, lastMeasurement);
 
-  server.on("/", handleRoot);               // Call the 'handleRoot' function when a client requests URI "/"
-  server.on("/style.css", []() {
-    server.send(200, "text/css", loader.load("/web/style.css"));
-  });   
-  server.on("/js/canvasjs/canvasjs.min.js", []() {
-    server.send(200, "application/javascript", loader.load("/web/js/canvasjs/canvasjs.min.js"));
-  });   
-  server.onNotFound(handleNotFound);        // When a client requests an unknown URI (i.e. something other than "/"), call function "handleNotFound"
-  
 
-  server.begin();
 }
 
 void loop() {
@@ -151,6 +156,15 @@ void loop() {
 
   server.handleClient();
   //get time
+
+
+    if (getDayNumber() != dayNumber ){
+        dayNumber = getDayNumber();
+
+
+
+
+    }
 
   noInterrupts();
 

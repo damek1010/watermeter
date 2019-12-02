@@ -42,3 +42,7 @@ char* TimeService::getDateAsString() {
   Serial.println(dateString);
   return dateString;
 }
+
+short TimeService::getDayNumber(){
+    return getCurrentTime().date;
+}

@@ -31,6 +31,8 @@ class TimeService {
     Time getCurrentTime();
 
     char* getDateAsString();
+
+    short getDayNumber();
 };
 
 
