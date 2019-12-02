@@ -16,47 +16,72 @@
 #define PIN_MISO 12
 #define PIN_CS 15
 
-char* ssid = "912B";
-char* password = "splot123";
+#define INTERRUPT_PIN D1
+#define EXIT_PIN D2
 
 //SdFat sd;
 CSVFile* csv;
 
 ESP8266WebServer server(80);
 HTMLLoader loader;
-
-uint32_t timeVar = 0;
+uint32_t utime = 0;
 
 uint32_t lastMeasurement = 0;
 
+uint32_t pulseCounter = 0;
+
 int i;
 
-const byte interruptPin = 5; // Pin to set interrupt to
-int interruptCounter = 0;
+bool end_of_work = false;
 
 //zmienna na czas
 
 
 
 
-//pulse counter
+static unsigned long last_interrupt_time = 0;
+
 void ICACHE_RAM_ATTR handleInterrupt() {
-  static unsigned long last_interrupt_time = 0;
   unsigned long interrupt_time = millis();
   // If interrupts come faster than 100ms, assume it's a bounce and ignore
   if (interrupt_time - last_interrupt_time > 100)
   {
-    interruptCounter++;
-    Serial.println(interruptCounter);
+    ++pulseCounter;
+    //Serial.println(pulseCounter);
 
-    Serial.println("writing to file");
+    //Serial.println("writing to file");
   }
   last_interrupt_time = interrupt_time;
 }
 
+void ICACHE_RAM_ATTR stopProgram() {
+
+  //Serial.println("Disabling Watermeter");
+  end_of_work = true;
+}
+
+
+
+
+
 //
 
-void setupSD() {
+
+
+void setup() {
+  Serial.begin(115200);
+  while (!Serial);
+
+  Serial.println("\nInit!");
+
+  system_update_cpu_freq(SYS_CPU_160MHZ);
+
+  pinMode(INTERRUPT_PIN, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN), handleInterrupt, FALLING);
+
+  pinMode(EXIT_PIN, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(EXIT_PIN), stopProgram, FALLING);
+
   pinMode(PIN_MOSI, OUTPUT);
   pinMode(PIN_MISO, INPUT);
   pinMode(PIN_CLK, OUTPUT);
@@ -97,9 +122,10 @@ void setup() {
     Serial.print(".");
   }
 
-  system_update_cpu_freq(SYS_CPU_160MHZ);
+  Serial.println("writing to file");
 
-  setupSD();
+  for (i = 0; i < 5; ++i, timeVar += 10, lastMeasurement += 20)
+    writeMeasurementToFile(csv, timeVar, lastMeasurement);
 
   server.on("/", handleRoot);               // Call the 'handleRoot' function when a client requests URI "/"
   server.on("/style.css", []() {
@@ -118,10 +144,33 @@ void loop() {
 
   //obluga strony
 
-  //ustawic f liczaca na przerwaninu (?)
-
   //jesli zmienil sie dzien, wywolaj zmiane pliku csv
+
+  delay(1000 * 3);
 
 
   server.handleClient();
+  //get time
+
+  noInterrupts();
+
+  writeMeasurementToFile(csv, utime, pulseCounter, pulseCounter - lastMeasurement);
+interrupts();
+  //change this later
+  utime += 3;
+
+  lastMeasurement = pulseCounter;
+ // Serial.println("Writing to file");
+ // Serial.println(utime);
+
+  if (end_of_work) {
+      noInterrupts();
+
+    closeFile(csv);
+    while (1) {
+      delay(1000);
+    }
+  }
+
+
 }
