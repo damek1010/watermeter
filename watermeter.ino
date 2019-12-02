@@ -1,8 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-//#include <sqlite3.h>
-//#include <vfs.h>
-//#include <SPI.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 #include "Measurement.h"
@@ -19,7 +16,6 @@
 #define INTERRUPT_PIN D1
 #define EXIT_PIN D2
 
-//SdFat sd;
 CSVFile* csv;
 
 ESP8266WebServer server(80);
@@ -32,15 +28,15 @@ uint32_t pulseCounter = 0;
 
 int i;
 
-short dayNumber;
+short dayNumber = 0;
 
+const char* ssid = "DESKTO";
+
+const char * password = "23X5q)23";
 
 bool end_of_work = false;
 
 //zmienna na czas
-
-
-
 
 static unsigned long last_interrupt_time = 0;
 
@@ -62,14 +58,6 @@ void ICACHE_RAM_ATTR stopProgram() {
   //Serial.println("Disabling Watermeter");
   end_of_work = true;
 }
-
-
-
-
-
-//
-
-
 
 void setup() {
   Serial.begin(115200);
@@ -99,12 +87,15 @@ void setup() {
     return;
   }
 
+  csv = openFile("tes.csv", sd);
+
     WiFi.begin(ssid, password);
     while (WiFi.status() != WL_CONNECTED) {
         delay(500);
         Serial.print(".");
     }
 
+Serial.println(WiFi.localIP());
 
     server.on("/", handleRoot);               // Call the 'handleRoot' function when a client requests URI "/"
     server.on("/style.css", []() {
@@ -129,47 +120,28 @@ void handleNotFound() {
   server.send(404, "text/html", "404: Not found"); // Send HTTP status 404 (Not Found) when there's no handler for the URI in the request
 }
 
-void setup() {
-  Serial.begin(115200);
-  while (!Serial);
-
-  Serial.println("\nInit!");
-
-
-
-  Serial.println("writing to file");
-
-  for (i = 0; i < 5; ++i, timeVar += 10, lastMeasurement += 20)
-    writeMeasurementToFile(csv, timeVar, lastMeasurement);
-
-
-}
-
 void loop() {
 
   //obluga strony
 
   //jesli zmienil sie dzien, wywolaj zmiane pliku csv
 
-  delay(1000 * 3);
+  //delay(1000 * 3);
 
 
   server.handleClient();
   //get time
 
+  if (false){
 
-    if (getDayNumber() != dayNumber ){
-        dayNumber = getDayNumber();
-
-
-
-
+  if (TimeService::getInstance().getDayNumber() != dayNumber ){
+     // dayNumber = TimeService::getInstance().getDayNumber();
     }
 
-  noInterrupts();
+ // noInterrupts();
 
-  writeMeasurementToFile(csv, utime, pulseCounter, pulseCounter - lastMeasurement);
-interrupts();
+//  writeMeasurementToFile(csv, utime, pulseCounter, pulseCounter - lastMeasurement);
+//interrupts();
   //change this later
   utime += 3;
 
@@ -185,6 +157,12 @@ interrupts();
       delay(1000);
     }
   }
+
+
+    
+  }
+
+  
 
 
 }
