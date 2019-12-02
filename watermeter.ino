@@ -3,50 +3,60 @@
 //#include <sqlite3.h>
 //#include <vfs.h>
 //#include <SPI.h>
-//#include <FS.h>
 #include <ESP8266WiFi.h>
+#include <ESP8266WebServer.h>
 #include "Measurement.h"
 
 #include "SDCardService.h"
+#include "TimeService.h"
+#include "HTMLLoader.h"
 
-#define PIN_CLK D5
-#define PIN_MOSI D7
-#define PIN_MISO D6
-#define PIN_CS D8
+#define PIN_CLK 14
+#define PIN_MOSI 13
+#define PIN_MISO 12
+#define PIN_CS 15
 
+char* ssid = "912B";
+char* password = "splot123";
 
-SdFat sd;
+//SdFat sd;
 CSVFile* csv;
 
-uint32_t timeVar = 999999999;
+ESP8266WebServer server(80);
+HTMLLoader loader;
 
-uint32_t lastMeasurement = 999999999;
+uint32_t timeVar = 0;
+
+uint32_t lastMeasurement = 0;
 
 int i;
 
+const byte interruptPin = 5; // Pin to set interrupt to
+int interruptCounter = 0;
+
 //zmienna na czas
-//zmienne na piny podlaczonego zegarka
 
 
 
 
 //pulse counter
+void ICACHE_RAM_ATTR handleInterrupt() {
+  static unsigned long last_interrupt_time = 0;
+  unsigned long interrupt_time = millis();
+  // If interrupts come faster than 100ms, assume it's a bounce and ignore
+  if (interrupt_time - last_interrupt_time > 100)
+  {
+    interruptCounter++;
+    Serial.println(interruptCounter);
 
+    Serial.println("writing to file");
+  }
+  last_interrupt_time = interrupt_time;
+}
 
 //
 
-
-
-void setup() {
-  Serial.begin(115200);
-  while (!Serial);
-
-  Serial.println("\nInit!");
-
-  system_update_cpu_freq(SYS_CPU_160MHZ);
-
-
-
+void setupSD() {
   pinMode(PIN_MOSI, OUTPUT);
   pinMode(PIN_MISO, INPUT);
   pinMode(PIN_CLK, OUTPUT);
@@ -61,59 +71,47 @@ void setup() {
     return;
   }
 
-  //timeservice, get time and save
-  //sdcardservice create/ open existing day file
-  ////create www page
+  pinMode(interruptPin, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(interruptPin), handleInterrupt, FALLING);
 
+}
 
+void handleRoot() {
+  String content = loader.load("/web/index.html");
+  server.send(200, "text/html", content);   // Send HTTP status 200 (Ok) and send some text to the browser/client
+}
 
+void handleNotFound() {
+  server.send(404, "text/html", "404: Not found"); // Send HTTP status 404 (Not Found) when there's no handler for the URI in the request
+}
 
+void setup() {
+  Serial.begin(115200);
+  while (!Serial);
 
-/*
-  Serial.println("create file");
+  Serial.println("\nInit!");
 
-  csv = createFile("csvtest.csv");
-
-  if (csv == nullptr) {
-    Serial.println("File opening error");
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
   }
 
-  Serial.println("writing to file");
+  system_update_cpu_freq(SYS_CPU_160MHZ);
 
-  for (i = 0; i < 5; ++i, timeVar += 10, lastMeasurement += 20)
-    writeMeasurementToFile(csv, timeVar, lastMeasurement);
+  setupSD();
 
-  Serial.println("going to begining");
+  server.on("/", handleRoot);               // Call the 'handleRoot' function when a client requests URI "/"
+  server.on("/style.css", []() {
+    server.send(200, "text/css", loader.load("/web/style.css"));
+  });   
+  server.on("/js/canvasjs/canvasjs.min.js", []() {
+    server.send(200, "application/javascript", loader.load("/web/js/canvasjs/canvasjs.min.js"));
+  });   
+  server.onNotFound(handleNotFound);        // When a client requests an unknown URI (i.e. something other than "/"), call function "handleNotFound"
+  
 
-  csv->gotoBeginOfFile();
-
-  uint32_t readTime;
-  uint32_t readValue;
-
-  Serial.println("reading");
-  for (i = 0; i < 3; ++i) {
-    readValuesOfCurrentRow(csv, readTime, readValue);
-
-    Serial.println(readTime);
-    Serial.println(readValue);
-  }
-
-
-  Serial.println("closinng-p--+-");
-
-  closeFile(csv);
-
-*/
-
-
-  //    ConnectionProvider::init();
-  //
-  //    QueryExecutor::createDatabase();
-  //
-  //    Measurement m = Measurement::create(10);
-  //
-  //    ConnectionProvider::close();
-
+  server.begin();
 }
 
 void loop() {
@@ -121,9 +119,9 @@ void loop() {
   //obluga strony
 
   //ustawic f liczaca na przerwaninu (?)
-  
-  //jesli zmienil sie dzien, wywolaj zmiane pliku csv 
+
+  //jesli zmienil sie dzien, wywolaj zmiane pliku csv
 
 
-  
+  server.handleClient();
 }
