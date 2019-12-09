@@ -21,7 +21,7 @@ void closeFile(CSVFile *csv);
 
 void changeFileToNextDayFile(CSVFile *csv, const char * newFileName);
 
-CSVFile* openFile(const char* filename);
+CSVFile* openFile(const char* filename, SdFat sd);
 
 
 

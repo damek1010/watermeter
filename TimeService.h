@@ -12,6 +12,7 @@ const int kIoPin   = 2;  // Input/Output
 const int kSclkPin = 14;  // Serial Clock
 
 class TimeService {
+public:
     static TimeService* instance;
 
     Time* fetchTime;
@@ -21,7 +22,7 @@ class TimeService {
 
     static DS1302* rtc;
 
-  public:
+  
     static TimeService& getInstance();
 
     static void init();

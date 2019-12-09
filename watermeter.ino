@@ -14,7 +14,7 @@
 #define PIN_CS 15
 
 #define INTERRUPT_PIN D1
-#define EXIT_PIN D2
+#define EXIT_PIN D3
 
 CSVFile* csv;
 
@@ -35,6 +35,14 @@ const char* ssid = "DESKTO";
 const char * password = "23X5q)23";
 
 bool end_of_work = false;
+
+long last_time_of_save = millis();
+
+long SAVE_PERIOD = 10000;
+
+long time_millis;
+
+TimeService ts = TimeService::getInstance();
 
 //zmienna na czas
 
@@ -63,6 +71,7 @@ void setup() {
   Serial.begin(115200);
   while (!Serial);
 
+  ESP.wdtEnable(10000);
   Serial.println("\nInit!");
 
   system_update_cpu_freq(SYS_CPU_160MHZ);
@@ -89,25 +98,25 @@ void setup() {
 
   csv = openFile("tes.csv", sd);
 
-    WiFi.begin(ssid, password);
-    while (WiFi.status() != WL_CONNECTED) {
-        delay(500);
-        Serial.print(".");
-    }
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
 
-Serial.println(WiFi.localIP());
+  Serial.println(WiFi.localIP());
 
-    server.on("/", handleRoot);               // Call the 'handleRoot' function when a client requests URI "/"
-    server.on("/style.css", []() {
-        server.send(200, "text/css", loader.load("/web/style.css"));
-    });
-    server.on("/js/canvasjs/canvasjs.min.js", []() {
-        server.send(200, "application/javascript", loader.load("/web/js/canvasjs/canvasjs.min.js"));
-    });
-    server.onNotFound(handleNotFound);        // When a client requests an unknown URI (i.e. something other than "/"), call function "handleNotFound"
-
-
-    server.begin();
+  server.on("/", handleRoot);               // Call the 'handleRoot' function when a client requests URI "/"
+  server.on("/style.css", []() {
+    server.send(200, "text/css", loader.load("/web/style.css"));
+  });
+  server.on("/js/canvasjs/canvasjs.min.js", []() {
+    server.send(200, "application/javascript", loader.load("/web/js/canvasjs/canvasjs.min.js"));
+  });
+  server.onNotFound(handleNotFound);        // When a client requests an unknown URI (i.e. something other than "/"), call function "handleNotFound"
+  server.on("/settings.html", handleSettings);
+  server.on("/index.html", handleRoot); 
+  server.begin();
 
 }
 
@@ -116,8 +125,54 @@ void handleRoot() {
   server.send(200, "text/html", content);   // Send HTTP status 200 (Ok) and send some text to the browser/client
 }
 
+void handleSettings() {
+  String content = loader.load("/web/settings.html");
+  server.send(200, "text/html", content);   // Send HTTP status 200 (Ok) and send some text to the browser/client
+}
+
 void handleNotFound() {
   server.send(404, "text/html", "404: Not found"); // Send HTTP status 404 (Not Found) when there's no handler for the URI in the request
+}
+
+void saving_routine(){
+
+  delay(0);
+    Serial.println("1");
+    last_time_of_save = time_millis;
+    Serial.println("2");
+  server.handleClient();
+  delay(0);
+
+    if (ts.getDayNumber() != dayNumber ) {
+      // dayNumber = TimeService::getInstance().getDayNumber();
+    }
+    Serial.println("3");
+      server.handleClient();
+
+
+    // noInterrupts();
+
+     writeMeasurementToFile(csv, utime, pulseCounter, pulseCounter - lastMeasurement);
+    //interrupts();
+    //change this later
+    utime += 3;
+    Serial.println("4");
+
+    lastMeasurement = pulseCounter;
+    // Serial.println("Writing to file");
+    // Serial.println(utime);
+    Serial.println("5");
+
+    if (end_of_work) {
+      noInterrupts();
+
+      closeFile(csv);
+      while (1) {
+        delay(1000);
+      }
+    }
+        Serial.println("6");
+
 }
 
 void loop() {
@@ -128,41 +183,23 @@ void loop() {
 
   //delay(1000 * 3);
 
+  delay(0);
 
   server.handleClient();
   //get time
 
-  if (false){
+  delay(0);
+  time_millis = millis();
+    delay(0);
 
-  if (TimeService::getInstance().getDayNumber() != dayNumber ){
-     // dayNumber = TimeService::getInstance().getDayNumber();
-    }
+//Serial.println("befif");
+  if (time_millis - last_time_of_save > SAVE_PERIOD) {
+    saving_routine();
 
- // noInterrupts();
-
-//  writeMeasurementToFile(csv, utime, pulseCounter, pulseCounter - lastMeasurement);
-//interrupts();
-  //change this later
-  utime += 3;
-
-  lastMeasurement = pulseCounter;
- // Serial.println("Writing to file");
- // Serial.println(utime);
-
-  if (end_of_work) {
-      noInterrupts();
-
-    closeFile(csv);
-    while (1) {
-      delay(1000);
-    }
   }
+//Serial.println("afif");
 
 
-    
-  }
-
-  
 
 
 }

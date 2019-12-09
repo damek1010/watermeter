@@ -17,7 +17,10 @@ CSVFile* createFile(const char* fileName) {
   return csv;
 }
 
-CSVFile* openFile(const char* filename) {
+CSVFile* openFile(const char* filename, SdFat sd) {
+  if (!sd.exists(filename)){
+    return createFile(filename);
+  }
   CSVFile* csv = new CSVFile();
   if (!csv->open(filename, O_RDWR | O_APPEND)) {
     Serial.println("Failed opening file");
